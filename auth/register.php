@@ -1,23 +1,27 @@
 <?php
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
+    session_start();
+
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
 
 
 
-require_once __DIR__ . ("/../database/db.php");
+    require_once __DIR__ . ("/../database/db.php");
 
-echo "<pre>";
-print_r($_POST);
-echo "</pre>";
 
 $name = $email = $password = $gender = $role = $interest = $address = null;
 $namevalidation = $emailvalidation = $passwordvalidation = $addressvalidation = $gendervalidation = $interestvalidation = $rolevalidation = null;
 $nameflag = $emailflag = $passwordflag = $genderflag = $roleflag = $interestflag = $addressflag = true;
 
-if (($_SERVER['REQUEST_METHOD'] == "POST") && $_POST['register']) {
+function timestamp()
+{
+    $dateTime = new DateTime("now", new DateTimeZone('Asia/Kolkata'));
+    return $dateTime->format('Y-m-d H:i:s');
+}
 
+if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
 
     // name 
 
@@ -91,14 +95,8 @@ if (($_SERVER['REQUEST_METHOD'] == "POST") && $_POST['register']) {
     } else {
         $address = htmlspecialchars(trim($_POST['address']));
     }
-}
 
-function timestamp()
-{
-    $dateTime = new DateTime("now", new DateTimeZone('Asia/Kolkata'));
-    return $dateTime->format('Y-m-d H:i:s');
-}
-
+    
 if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $interestflag && $addressflag) {
     echo "step ahead";
 
@@ -115,11 +113,24 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
 
             $created_at = timestamp();
             $passwordHash = password_hash((string)$password, PASSWORD_DEFAULT);
+            //echo $passwordHash;
 
-            $sql_insert = "INSERT INTO `users`(`name`, `gender`, `email`, `password`, `role`, `address`, `interest`, `created_at`) 
-                            VALUES ('$name','$gender','$email','$passwordHash','$role','$address','$interest','$created_at')";
+           $sql_insert = "INSERT INTO users 
+                (name, gender, email, password, role, address, interest, created_at) 
+                VALUES (:name, :gender, :email, :password, :role, :address, :interest, :created_at)";
 
-            $stmt = $connect->exec($sql_insert);
+                $stmt = $connect->prepare($sql_insert);
+
+                $stmt->execute([
+                    ':name' => $name,
+                    ':gender' => $gender,
+                    ':email' => $email,
+                    ':password' => $passwordHash,
+                    ':role' => $role,
+                    ':address' => $address,
+                    ':interest' => $interest,
+                    ':created_at' => $created_at
+                ]);
             $_SESSION['msg'] = "<div class='alert alert-success' role='alert' id='alert'>record added successfully</div>";
 
             header("Location: ../admin/dashboard.php");
@@ -131,6 +142,10 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
         $connect = null;
     }
 }
+}
+
+
+
 
 ?>
 

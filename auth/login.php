@@ -61,10 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
         $_SESSION['email'] = $user['email'];
         $_SESSION['role'] = $user['role'];
 
-        // print_r($user);
-
-       // print_r($user);
-
         if($user['email'] != $email) {
             $emailvalidation =  "email is wrong";
             
@@ -177,39 +173,39 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     </div>
 
     <script>
-        // $(document).ready(function(){
+         $(document).ready(function(){
 
-        //     $("#loginform").validate({
-        //         rules: {
-        //             email : {
-        //                 required : true,
-        //                 email : true
-        //             },
-        //             password : {
-        //                 required : true,
-        //                 minlength : 5
-        //             },
+           $("#loginform").validate({
+                rules: {
+                    email : {
+                        required : true,
+                        email : true
+                    },
+                    password : {
+                        required : true,
+                        minlength : 5
+                    },
 
-        //         },
-        //         messages: {
+                },
+                messages: {
 
-        //             email : {
-        //                 required : "email is required",
-        //                 email : "please enter a valid email address"
-        //             },
-        //             password : {
-        //                 required : "password is required",
-        //                 minlength : "password at least 5 characters"
-        //             },
+                    email : {
+                        required : "email is required",
+                        email : "please enter a valid email address"
+                    },
+                    password : {
+                        required : "password is required",
+                        minlength : "password at least 5 characters"
+                    },
 
-        //         },
+                },
 
 
 
-        //         submitHandler: function(form) {
-        //             $("#loginform").submit();
-        //         }
-        //     });
+                submitHandler: function(form) {
+                    form.submit();
+                }
+            });
 
          $(".toggle-password").click(function() {
                 $(this).toggleClass("fa-eye fa-eye-slash");
@@ -220,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                     input.attr("type", "password");
                 }
             });
-        // });
+        });
     </script>
 
 </body>

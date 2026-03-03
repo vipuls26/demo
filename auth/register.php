@@ -11,15 +11,15 @@
     require_once __DIR__ . ("/../database/db.php");
 
 
-$name = $email = $password = $gender = $role = $interest = $address = null;
-$namevalidation = $emailvalidation = $passwordvalidation = $addressvalidation = $gendervalidation = $interestvalidation = $rolevalidation = null;
-$nameflag = $emailflag = $passwordflag = $genderflag = $roleflag = $interestflag = $addressflag = true;
+    $name = $email = $password = $gender = $role = $interest = $address = null;
+    $namevalidation = $emailvalidation = $passwordvalidation = $addressvalidation = $gendervalidation = $interestvalidation = $rolevalidation = null;
+    $nameflag = $emailflag = $passwordflag = $genderflag = $roleflag = $interestflag = $addressflag = true;
 
-function timestamp()
-{
-    $dateTime = new DateTime("now", new DateTimeZone('Asia/Kolkata'));
-    return $dateTime->format('Y-m-d H:i:s');
-}
+    function timestamp()
+    {
+        $dateTime = new DateTime("now", new DateTimeZone('Asia/Kolkata'));
+        return $dateTime->format('Y-m-d H:i:s');
+    }
 
 if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
 
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
 
     
 if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $interestflag && $addressflag) {
-    echo "step ahead";
+   // echo "step ahead";
 
     try {
 
@@ -323,9 +323,7 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
                             <div class="col-12">
 
                                 <label for="address" class="form-label">Address<span class="text-danger">*</span></label><br>
-                                <textarea class="form-control border-dark" name="address" >
-                                          <?php echo isset($row['address']) ? $row['address'] : "" ?>
-                                        </textarea>
+                                <textarea class="form-control border-dark" name="address"><?php echo isset($row['address']) ? $row['address'] : "" ?></textarea>
 
                                 <div class="text-danger mt-2">
                                     <label id="address-error" class="error" for="address">
@@ -412,7 +410,7 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
 
                 },
                 submitHandler: function(form) {
-                    $("#registerform").submit();
+                    form.submit();
                 }
             });
 

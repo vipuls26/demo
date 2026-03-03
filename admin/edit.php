@@ -1,96 +1,96 @@
 <?php
 
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+    ini_set('display_errors', 1);
+    error_reporting(E_ALL);
 
-session_start();
-require_once __DIR__ . "/../database/db.php";
-
-
-function timestamp() {
-    $dateTime = new DateTime("now", new DateTimeZone('Asia/Kolkata'));
-    return $dateTime->format('Y-m-d H:i:s');
-}
+    session_start();
+    require_once __DIR__ . "/../database/db.php";
 
 
-$editrecord = 0;
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $editrecord = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-} else {
-    $editrecord = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-}
-
-if ($editrecord <= 0) {
-    die("Invalid ID");
-}
-
-
-$stmt = $connect->prepare("SELECT * FROM users WHERE id = :id");
-$stmt->execute([':id' => $editrecord]);
-$user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$user) {
-    die("User not found");
-}
-
-
-if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['update'])) {
-
-    $id = (int)$_POST['id'];
-
-    $name = trim($_POST['name']);
-    $email = trim($_POST['email']);
-    $gender = $_POST['gender'] ?? '';
-    $role = $_POST['role'] ?? '';
-    $address = trim($_POST['address']);
-    $interest = isset($_POST['interest']) ? implode(" ", $_POST['interest']) : '';
-
-    if (!$name || !$email || !$gender || !$role || !$address || !$interest) {
-        die("All fields are required");
+    function timestamp() {
+        $dateTime = new DateTime("now", new DateTimeZone('Asia/Kolkata'));
+        return $dateTime->format('Y-m-d H:i:s');
     }
 
- 
-    $check = $connect->prepare("SELECT id FROM users WHERE email = :email AND id != :id");
-    $check->execute([
-        ':email' => $email,
-        ':id' => $id
-    ]);
 
-    if ($check->rowCount() > 0) {
-        die("Email already exists");
+    $editrecord = 0;
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $editrecord = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+    } else {
+        $editrecord = isset($_GET['id']) ? (int)$_GET['id'] : 0;
     }
 
-   
+    if ($editrecord <= 0) {
+        die("Invalid ID");
+    }
+
+
+    $stmt = $connect->prepare("SELECT * FROM users WHERE id = :id");
+    $stmt->execute([':id' => $editrecord]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$user) {
+        die("User not found");
+    }
+
+
+    if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['update'])) {
+
+        $id = (int)$_POST['id'];
+
+        $name = trim($_POST['name']);
+        $email = trim($_POST['email']);
+        $gender = $_POST['gender'] ?? '';
+        $role = $_POST['role'] ?? '';
+        $address = trim($_POST['address']);
+        $interest = isset($_POST['interest']) ? implode(" ", $_POST['interest']) : '';
+
+        if (!$name || !$email || !$gender || !$role || !$address || !$interest) {
+            die("All fields are required");
+        }
+
     
-    $update = $connect->prepare("
-        UPDATE users SET
-            name = :name,
-            gender = :gender,
-            email = :email,
-            role = :role,
-            address = :address,
-            interest = :interest,
-            updated_at = :updated_at
-        WHERE id = :id
-    ");
+        $check = $connect->prepare("SELECT id FROM users WHERE email = :email AND id != :id");
+        $check->execute([
+            ':email' => $email,
+            ':id' => $id
+        ]);
 
-    $update->execute([
-        ':name' => $name,
-        ':gender' => $gender,
-        ':email' => $email,
-        ':role' => $role,
-        ':address' => $address,
-        ':interest' => $interest,
-        ':updated_at' => timestamp(),
-        ':id' => $id
-    ]);
+        if ($check->rowCount() > 0) {
+            die("Email already exists");
+        }
 
-    $_SESSION['msg'] = "<div class='alert alert-info' role='alert' id='alert'>record update successfully</div>";
+    
+        
+        $update = $connect->prepare("
+            UPDATE users SET
+                name = :name,
+                gender = :gender,
+                email = :email,
+                role = :role,
+                address = :address,
+                interest = :interest,
+                updated_at = :updated_at
+            WHERE id = :id
+        ");
 
-    header("Location: dashboard.php");
-    exit();
-}
+        $update->execute([
+            ':name' => $name,
+            ':gender' => $gender,
+            ':email' => $email,
+            ':role' => $role,
+            ':address' => $address,
+            ':interest' => $interest,
+            ':updated_at' => timestamp(),
+            ':id' => $id
+        ]);
+
+        $_SESSION['msg'] = "<div class='alert alert-info' role='alert' id='alert'>record update successfully</div>";
+
+        header("Location: dashboard.php");
+        exit();
+    }
 
 ?>
 <!DOCTYPE html>

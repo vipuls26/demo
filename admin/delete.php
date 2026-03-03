@@ -2,6 +2,14 @@
 
     session_start();
 
+
+    if (!isset($_SESSION['email'])) {
+        header("Location: ../auth/logout.php");
+    } elseif ($_SESSION['role'] !== "admin") {
+        header("Location: ../user/dashboard.php");
+        exit();
+    }
+
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
@@ -15,7 +23,5 @@
     $_SESSION['msg'] = "<div class='alert alert-danger' role='alert' id='alert'>record delete successfully</div>";
     header("Location: ./dashboard.php");
     exit();
-
-
 
 ?>

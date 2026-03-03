@@ -2,11 +2,21 @@
 
     session_start();
 
+    // print_r($_POST);
+
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
 
+    // var_dump($_SESSION);
 
+    if (!isset($_SESSION['email']) ) {
+        header("Location: ../auth/logout.php");
+    } elseif ($_SESSION['role'] === "user") {
+        header("Location: ../user/dashboard.php");
+     } //elseif( $_SESSION['role'] === "admin" ) {
+    //     header("Location: ../admin/dashboard.php");
+    // }
 
     require_once __DIR__ . ("/../database/db.php");
 
@@ -80,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
         $interestvalidation = "interest filed is required";
         $interestflag = false;
     } else {
-        $interest = implode(" ", $_POST['interest']);
+        $interest = implode(",", $_POST['interest']);
         $interestflag = true;
         $interest;
     }
@@ -97,51 +107,52 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
     }
 
     
-if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $interestflag && $addressflag) {
-   // echo "step ahead";
+    if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $addressflag) {
+    // echo "step ahead";
 
-    try {
+        try {
 
-        $sql_select =  "SELECT email FROM users where email = :email";
-        $stmt = $connect->prepare($sql_select);
-        $stmt->bindParam(":email", $email);
-        $stmt->execute();
+            $sql_select =  "SELECT email FROM users where email = :email";
+            $stmt = $connect->prepare($sql_select);
+            $stmt->bindParam(":email", $email);
+            $stmt->execute();
 
-        if ($stmt->rowCount() > 0) {
-            $emailvalidation = "this email already exist";
-        } else {
+            if ($stmt->rowCount() > 0) {
+                $emailvalidation = "this email already exist";
+            } else {
 
-            $created_at = timestamp();
-            $passwordHash = password_hash((string)$password, PASSWORD_DEFAULT);
-            //echo $passwordHash;
+                $created_at = timestamp();
+                $passwordHash = password_hash((string)$password, PASSWORD_DEFAULT);
 
-           $sql_insert = "INSERT INTO users 
-                (name, gender, email, password, role, address, interest, created_at) 
-                VALUES (:name, :gender, :email, :password, :role, :address, :interest, :created_at)";
 
-                $stmt = $connect->prepare($sql_insert);
+                $sql_insert = "INSERT INTO users 
+                        (name, gender, email, password, role, address, interest, created_at) 
+                        VALUES (:name, :gender, :email, :password, :role, :address, :interest, :created_at)";
 
-                $stmt->execute([
-                    ':name' => $name,
-                    ':gender' => $gender,
-                    ':email' => $email,
-                    ':password' => $passwordHash,
-                    ':role' => $role,
-                    ':address' => $address,
-                    ':interest' => $interest,
-                    ':created_at' => $created_at
-                ]);
-            $_SESSION['msg'] = "<div class='alert alert-success' role='alert' id='alert'>record added successfully</div>";
+                        $stmt = $connect->prepare($sql_insert);
 
-            header("Location: ../admin/dashboard.php");
+                        $stmt->execute([
+                            ':name' => $name,
+                            ':gender' => $gender,
+                            ':email' => $email,
+                            ':password' => $passwordHash,
+                            ':role' => $role,
+                            ':address' => $address,
+                            ':interest' => $interest,
+                            ':created_at' => $created_at
+                        ]);
+                        
+                $_SESSION['msg'] = "<div class='alert alert-success' role='alert' id='alert'>record added successfully</div>";
+
+                header("Location: ../admin/dashboard.php");
+            }
+        } catch (Exception $e) {
+            echo "Error occur while inserting data " . $e->getMessage();
+        } finally {
+            $stmt = null;
+            $connect = null;
         }
-    } catch (Exception $e) {
-        echo "Error occur while inserting data " . $e->getMessage();
-    } finally {
-        $stmt = null;
-        $connect = null;
     }
-}
 }
 
 
@@ -167,7 +178,7 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
     <!-- jquery validation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.21.0/jquery.validate.min.js" integrity="sha512-KFHXdr2oObHKI9w4Hv1XPKc898mE4kgYx58oqsc/JqqdLMDI4YjOLzom+EMlW8HFUd0QfjfAvxSL6sEq/a42fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.21.0/jquery.validate.min.js" integrity="sha512-KFHXdr2oObHKI9w4Hv1XPKc898mE4kgYx58oqsc/JqqdLMDI4YjOLzom+EMlW8HFUd0QfjfAvxSL6sEq/a42fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
 
     <style>
         .toggle-password {
@@ -180,7 +191,9 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
 </head>
 
 <body>
-
+    
+    <?php  require_once __DIR__ . ("/../utility/header.php") ?>
+    
     <div class="container-fluid">
         <div class="d-flex justify-content-center align-items-center">
             <div class="card mt-5 w-75">
@@ -236,21 +249,37 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
 
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="radio" id="male"
-                                        value="male"
-                                        name="gender">
+                                        value="male"  <?php 
+                                                                if(isset($_POST['gender'])) {
+                                                                    echo $_POST['gender'] == "male" ? 'checked' : '';
+                                                                }
+                                                        ?>
+                                        name="gender"
+                                        checked>
+
+                  
+
                                     <label class="form-check-label" for="male">Male</label>
                                 </div>
 
                                 <div class="form-check form-check-inline ">
                                     <input class="form-check-input border-dark" type="radio" id="female"
-                                        value="female"
+                                        value="female" <?php 
+                                                                if(isset($_POST['gender'])) {
+                                                                    echo $_POST['gender'] == "female" ? 'checked' : '';
+                                                                }
+                                                        ?>
                                         name="gender">
                                     <label class="form-check-label" for="female">Female</label>
                                 </div>
 
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="radio" id="other"
-                                        value="other"
+                                        value="other" <?php 
+                                                            if(isset($_POST['gender'])) {
+                                                                    echo $_POST['gender'] == "other" ? 'checked' : '';
+                                                                }
+                                                        ?>
                                         name="gender">
                                     <label class="form-check-label" for="other">Other</label>
                                 </div>
@@ -263,22 +292,32 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="radio" id="admin"
                                         value="admin"
-                                        name="role">
-                                    <label class="form-check-label" for="inlineCheckbox1">Admin</label>
+                                                <?php 
+                                                    if(isset($_POST['role'])) {
+                                                        echo $_POST['role'] == "admin" ? 'checked' : '';
+                                                    }
+                                                ?>
+                                        name="role" checked>
+                                    <label class="form-check-label" for="admin">Admin</label>
                                 </div>
 
                                 <div class="form-check form-check-inline ">
                                     <input class="form-check-input border-dark" type="radio" id="user"
                                         value="user"
+                                         <?php 
+                                             if(isset($_POST['role'])) {
+                                                        echo $_POST['role'] == "user" ? 'checked' : '';
+                                            }
+                                        ?>
                                         name="role">
-                                    <label class="form-check-label" for="inlineCheckbox2">User</label>
+                                    <label class="form-check-label" for="user">User</label>
                                 </div>
 
 
                             </div>
 
                             <div class="col-12 col-md-6">
-                                <label for="interest" class="form-label">Interest<span class="text-danger">*</span></label>
+                                <label for="interest" class="form-label">Interest</label>
                                 <br>
 
                                 <div class="form-check form-check-inline">
@@ -286,6 +325,11 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
 
                                     <input class="form-check-input border-dark" type="checkbox" id="reading"
                                         value="reading"
+                                        <?php 
+                                            if(isset($_POST['interest'])) {
+                                                echo (in_array("reading", $_POST['interest'])) ? 'checked' : '';
+                                            }
+                                             ?>
                                         name="interest[]">
                                     <label class="form-check-label" for="reading">Reading</label>
                                 </div>
@@ -293,6 +337,11 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="checkbox" id="playing"
                                         value="playing"
+                                          <?php 
+                                            if(isset($_POST['interest'])) {
+                                                echo (in_array("playing", $_POST['interest'])) ? 'checked' : '';
+                                            }
+                                          ?>
                                         name="interest[]">
                                     <label class="form-check-label" for="playing">Playing</label>
                                 </div>
@@ -300,6 +349,11 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="checkbox" id="travelling"
                                         value="travelling"
+                                          <?php 
+                                             if(isset($_POST['interest'])) {
+                                                echo (in_array("travelling", $_POST['interest'])) ? 'checked' : '';
+                                            }
+                                          ?>
                                         name="interest[]">
                                     <label class="form-check-label" for="travelling">Travelling</label>
                                 </div>
@@ -307,23 +361,21 @@ if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $int
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="checkbox" id="exploring"
                                         value="exploring"
+                                          <?php 
+                                             if(isset($_POST['interest'])) {
+                                                echo (in_array("exploring", $_POST['interest'])) ? 'checked' : '';
+                                            }
+                                          ?>
                                         name="interest[]">
                                     <label class="form-check-label" for="exploring">Exploring</label>
                                 </div>
-
-                                <div class="text-danger mt-2">
-                                    <label id="address-error" class="error" for="address">
-                                        <?php echo isset($interestvalidation) ? $interestvalidation : '' ?>
-                                    </label>
-                                </div>
-
                             </div>
 
 
                             <div class="col-12">
 
                                 <label for="address" class="form-label">Address<span class="text-danger">*</span></label><br>
-                                <textarea class="form-control border-dark" name="address"><?php echo isset($row['address']) ? $row['address'] : "" ?></textarea>
+                                <textarea class="form-control border-dark" name="address" placeholder="address"><?php echo isset($_POST['address']) ? $_POST['address'] : "" ?></textarea>
 
                                 <div class="text-danger mt-2">
                                     <label id="address-error" class="error" for="address">

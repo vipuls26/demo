@@ -1,23 +1,24 @@
 <?php
 
+    require_once __DIR__ . ("/../database/db.php");
+
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
-    
+
     session_start();
 
-    if(!isset($_SESSION['email'])) {
+    // var_dump($_SESSION);
+    if (!isset($_SESSION['email'])) {
         header("Location: ../auth/logout.php");
+    } elseif ($_SESSION['role'] !== "user") {
+    header("Location: ../admin/dashboard.php");
+        exit();
     }
-
-
-
-    require_once __DIR__ . ("/../database/db.php");
 
     try {
 
-        $sql_select = "SELECT * FROM `users` ORDER BY id";
-
+        $sql_select = "SELECT * FROM users WHERE role = 'user' ORDER BY id;";
         $result = $connect->query($sql_select);
     } catch (Exception $e) {
         echo "Error occur while fetching data" . $e->getMessage();
@@ -46,10 +47,8 @@
 
 <body>
 
-    <nav class="navbar bg-dark">
+    <?php  require_once __DIR__ . ("/../utility/header.php") ?>
 
-        <a href="../auth/logout.php" class="btn btn-danger">Logout</a>
-    </nav>
 
     <div class="container mt-5">
         <?php
@@ -60,50 +59,48 @@
 
         ?>
 
-         <p>welcome , <?php echo $_SESSION['name']; ?></p>
+        <p>welcome , <?php echo $_SESSION['name']; ?></p>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Address</th>
+                        <th>Interest</th>
+                        <th>Created_at</th>
+                        <th>Updated_at</th>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Name</th>
-                    <th>Gender</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Address</th>
-                    <th>Interest</th>
-                    <th>Created_at</th>
-                    <th>Updated_at</th>
-                    
-                </tr>
-            </thead>
-            <tbody>
-                <?php
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
 
-                if ($result->rowCount() > 0) {
-                    while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                    if ($result->rowCount() > 0) {
+                        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 
-                ?>
-                        <tr>
-                            <td><?= $row['id'] ?></td>
-                            <td> <?= $row['name'] ?></td>
-                            <td> <?= $row['gender'] ?></td>
-                            <td> <?= $row['email'] ?></td>
-                            <td> <?= $row['role'] == "user" ?></td>
-                            <td> <?= $row['address'] ?></td>
-                            <td> <?= $row['interest'] ?></td>
-                            <td> <?= $row['created_at'] ?></td>
-                            <td> <?= $row['updated_at'] ?></td>
-                           
-                
-                        </tr>
+                    ?>
+                            <tr>
+                                <td><?= $row['id'] ?></td>
+                                <td> <?= $row['name'] ?></td>
+                                <td> <?= $row['gender'] ?></td>
+                                <td> <?= $row['email'] ?></td>
+                                <td> <?= $row['role'] ?></td>
+                                <td> <?= $row['address'] ?></td>
+                                <td> <?= $row['interest'] ?></td>
+                                <td> <?= $row['created_at'] ?></td>
+                                <td> <?= $row['updated_at'] ?? 'not update yet' ?> </td>
+                            </tr>
 
-                <?php  }
-                } ?>
-            </tbody>
+                    <?php  }
+                    } ?>
+                </tbody>
 
-        </table>
-
+            </table>
+        </div>
     </div>
 
 

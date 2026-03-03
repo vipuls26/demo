@@ -5,12 +5,15 @@
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
-    
+
     session_start();
-    
-    if(!isset($_SESSION['email'])) {
+
+    if (!isset($_SESSION['email'])) {
         header("Location: ../auth/logout.php");
-    }
+    } elseif ($_SESSION['role'] !== "admin") {
+        header("Location: ../user/dashboard.php");
+        exit();
+    } 
 
     try {
         $sql_select = "SELECT * FROM `users` ORDER BY id";
@@ -21,7 +24,6 @@
         $stmt = null;
         $connect = null;
     }
-
 
 ?>
 
@@ -43,10 +45,7 @@
 <body>
 
 
-    <nav class="navbar bg-dark">
-
-        <a href="../auth/logout.php" class="btn btn-danger">Logout</a>
-    </nav>
+    <?php  require_once __DIR__ . ("/../utility/header.php") ?>
 
     <div class="container mt-5">
         <?php
@@ -60,49 +59,51 @@
 
         <a href="../auth/register.php" class="btn btn-info">Add user</a>
 
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th>Name</th>
-                    <th>Gender</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Address</th>
-                    <th>Interest</th>
-                    <th>Created_at</th>
-                    <th>Updated_at</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Address</th>
+                        <th>Interest</th>
+                        <th>Created_at</th>
+                        <th>Updated_at</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
 
-                if ($result->rowCount() > 0) {
-                    while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
+                    if ($result->rowCount() > 0) {
+                        while ($row = $result->fetch(PDO::FETCH_ASSOC)) {
 
-                ?>
-                        <tr>
-                            <td><?= $row['id'] ?></td>
-                            <td> <?= $row['name'] ?></td>
-                            <td> <?= $row['gender'] ?></td>
-                            <td> <?= $row['email'] ?></td>
-                            <td> <?= $row['role'] ?></td>
-                            <td> <?= $row['address'] ?></td>
-                            <td> <?= $row['interest'] ?></td>
-                            <td> <?= $row['created_at'] ?></td>
-                            <td> <?= $row['updated_at'] ?></td>
-                            <td>
-                                <a href="../admin/edit.php?id=<?= $row['id'] ?>" class="btn btn-warning">Edit</a>
-                                <a href="../admin/delete.php?id=<?=  $row['id'] ?>" class="btn btn-danger mt-2 delete"> Delete</a>
-                            </td>
-                        </tr>
+                    ?>
+                            <tr>
+                                <td><?= $row['id'] ?></td>
+                                <td> <?= $row['name'] ?></td>
+                                <td> <?= $row['gender'] ?></td>
+                                <td> <?= $row['email'] ?></td>
+                                <td> <?= $row['role'] ?></td>
+                                <td> <?= $row['address'] ?></td>
+                                <td> <?= $row['interest'] ?></td>
+                                <td> <?= $row['created_at'] ?></td>
+                                <td> <?= $row['updated_at'] ?? 'not updated yet' ?></td>
+                                <td>
+                                    <a href="../admin/edit.php?id=<?= $row['id'] ?>" class="btn btn-warning">Edit</a>
+                                    <a href="../admin/delete.php?id=<?= $row['id'] ?>" class="btn btn-danger mt-2 delete"> Delete</a>
+                                </td>
+                            </tr>
 
-                <?php  }
-                } ?>
-            </tbody>
+                    <?php  }
+                    } ?>
+                </tbody>
 
-        </table>
+            </table>
+        </div>
 
     </div>
 

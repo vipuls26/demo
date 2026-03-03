@@ -12,14 +12,14 @@
     if (!isset($_SESSION['email'])) {
         header("Location: ../auth/logout.php");
     } elseif ($_SESSION['role'] !== "user") {
-    header("Location: ../admin/dashboard.php");
+        header("Location: ../admin/dashboard.php");
         exit();
     }
 
     try {
 
-        $sql_select = "SELECT * FROM users WHERE role = 'user' ORDER BY id;";
-        $result = $connect->query($sql_select);
+        $sql_select = "SELECT * FROM users WHERE role = 'user'";
+            $result = $connect->query($sql_select);
     } catch (Exception $e) {
         echo "Error occur while fetching data" . $e->getMessage();
     } finally {
@@ -41,27 +41,41 @@
     <!-- bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
+    <!-- bootstrap js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jquery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+
+
 </head>
 
 <body>
 
     <?php  require_once __DIR__ . ("/../utility/header.php") ?>
 
+    
 
     <div class="container mt-5">
         <?php
         if (isset($_SESSION['msg'])) {
             echo $_SESSION['msg'];
             unset($_SESSION['msg']);
-        }
-
+        }         
         ?>
+        <div class="d-flex justify-content-between">
 
-        <p>welcome , <?php echo $_SESSION['name']; ?></p>
-        <div class="table-responsive">
-            <table class="table">
+          <p>welcome , <?php echo $_SESSION['name']; ?></p>
+               <?php
+                    if (isset($_SESSION['toast'])) {
+                        echo $_SESSION['toast'];
+                        unset($_SESSION['toast']);
+                    }
+                ?>
+        </div>
+
+      
+        <div class="table-responsive mt-3">
+            <table class="table table-bordered border-secondary">
                 <thead>
                     <tr>
                         <th>Id</th>
@@ -96,23 +110,28 @@
                             </tr>
 
                     <?php  }
+                    } else {
+                        echo "<p class='fs-4 text-secondary text-center'>no user are in databse</p>";
                     } ?>
                 </tbody>
 
             </table>
         </div>
     </div>
-
-
-    <script>
+    
+<script>
         $(document).ready(function() {
 
             setTimeout(() => {
                 $(".alert").fadeOut("fast");
             }, 2000);
 
+             setTimeout(() => {
+                $("#toastmsg").fadeOut("fast");
+            }, 2000);
+
         });
-    </script>
+</script>
 </body>
 
 </html>

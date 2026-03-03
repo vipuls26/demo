@@ -1,10 +1,10 @@
 <?php
 
-// ini_set('display_errors', 1);
-// ini_set('display_startup_errors', 1);
-// error_reporting(E_ALL);
+    // ini_set('display_errors', 1);
+    // ini_set('display_startup_errors', 1);
+    // error_reporting(E_ALL);
 
-session_start();
+    session_start();
 
     if(isset($_SESSION['email'])) {
         if($_SESSION['role'] == "admin") {
@@ -14,75 +14,80 @@ session_start();
         }
     }
 
-require_once __DIR__ . ("/../database/db.php");
+    require_once __DIR__ . ("/../database/db.php");
 
-// echo "<pre>";
-// print_r($_POST);
-// echo "</pre>";
+    if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
-if ($_SERVER['REQUEST_METHOD'] == "POST") {
-
-    $email = $password = null;
-    $emailvalidation = $passwordvalidation = null;
-    $emailflag = $passwordflag = true;
+        $email = $password = null;
+        $emailvalidation = $passwordvalidation = null;
+        $emailflag = $passwordflag = true;
 
 
-    if (empty($_POST['email'])) {
-        $emailvalidation = "email is required";
-        $emailflag = false;
-    } elseif (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-        $emailvalidation = "please enter a valid email address";
-        $emailflag = false;
-    } else {
-        $email = htmlspecialchars(trim($_POST['email']));
-    }
-
-    if (empty($_POST['password'])) {
-        $passwordvalidation = "password is required";
-        $passwordflag = false;
-    } elseif (strlen($_POST['password']) < 5) {
-        $passwordvalidation = "password at least 5 characters";
-        $passwordflag = false;
-    } else {
-        $password = htmlspecialchars(trim($_POST['password']));
-    }
-
-
-    if($emailflag && $password) {
-        
-        $sql_select =  "SELECT name , email, password, role FROM users where email = :email";
-        $stmt = $connect->prepare($sql_select);
-        $stmt->bindParam(":email", $email);
-        $stmt->execute();
-
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        $_SESSION['name'] = $user['name'];
-        $_SESSION['email'] = $user['email'];
-        $_SESSION['role'] = $user['role'];
-
-        if($user['email'] != $email) {
-            $emailvalidation =  "email is incorrect";
-            
+        if (empty($_POST['email'])) {
+            $emailvalidation = "email is required";
+            $emailflag = false;
+        } elseif (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+            $emailvalidation = "please enter a valid email address";
+            $emailflag = false;
         } else {
-            
-            if($user && password_verify($password,$user['password'])) {
-                $_SESSION['msg'] = "<div class='alert alert-success' role='alert' id='alert'>welcome " . $_SESSION['name'] . "</div>";
-                if($user['role'] == "admin") {
-                    header("Location: ../admin/dashboard.php");
-                    exit();
-                } else {
-                    header("Location: ../user/dashboard.php");
-                }
-            } else {
-                $passwordvalidation = "password is incorrect";
-            }
+            $email = htmlspecialchars(trim($_POST['email']));
+        }
+
+        if (empty($_POST['password'])) {
+            $passwordvalidation = "password is required";
+            $passwordflag = false;
+        } elseif (strlen($_POST['password']) < 5) {
+            $passwordvalidation = "password at least 5 characters";
+            $passwordflag = false;
+        } else {
+            $password = htmlspecialchars(trim($_POST['password']));
         }
 
 
-     
+        if($emailflag && $password) {
+            
+            $sql_select =  "SELECT name , email, password, role FROM users where email = :email";
+            $stmt = $connect->prepare($sql_select);
+            $stmt->bindParam(":email", $email);
+            $stmt->execute();
+
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if($user['email'] != $email) {
+                $emailvalidation =  "email is not register";
+ 
+            } else {
+                
+                if($user && password_verify($password,$user['password'])) {
+                    //$_SESSION['msg'] = "<div class='alert alert-success' role='alert' id='alert'>welcome " . $_SESSION['name'] . "</div>";
+                    $_SESSION['toast'] = "<div class='toast show' role='alert' id='toastmsg' aria-live='assertive' aria-atomic='true'>
+                        <div class='toast-header bg-success'>
+                            <strong class='me-auto'>Notification</strong>
+                            <button type='button' class='btn-close' data-bs-dismiss='toast' aria-label='Close'></button>
+                        </div>
+                        <div class='toast-body bg-success'>
+                          welcome ". $_SESSION['name'] . "
+
+                        </div>
+                    </div>
+               ";
+
+                    $_SESSION['name'] = $user['name'];
+                    $_SESSION['email'] = $user['email'];
+                    $_SESSION['role'] = $user['role'];
+                    
+                    if($user['role'] == "admin") {
+                        header("Location: ../admin/dashboard.php");
+                        exit();
+                    } else {
+                        header("Location: ../user/dashboard.php");
+                    }
+                } else {
+                    $passwordvalidation = "password is incorrect";
+                }
+            }     
+        }
     }
-}
 
 
 
@@ -98,13 +103,16 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
     <!-- bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
+    <!-- bootstrap js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
     <!-- icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css">
     <!-- jquery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
     <!-- jquery validation -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.21.0/jquery.validate.min.js" integrity="sha512-KFHXdr2oObHKI9w4Hv1XPKc898mE4kgYx58oqsc/JqqdLMDI4YjOLzom+EMlW8HFUd0QfjfAvxSL6sEq/a42fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.21.0/jquery.validate.min.js" integrity="sha512-KFHXdr2oObHKI9w4Hv1XPKc898mE4kgYx58oqsc/JqqdLMDI4YjOLzom+EMlW8HFUd0QfjfAvxSL6sEq/a42fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
       <style>
         .toggle-password {
@@ -114,23 +122,19 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
             margin-top: -25px;
         }
     </style>
-
 </head>
 </head>
 
 <body>
 
-    <div class="container-fluid">
-        <div class="d-flex justify-content-center align-items-center">
+    <div class="container-fluid mt-5">
+        <div class="d-flex justify-content-center">
             <div class="card mt-5 w-50">
                 <form action="<?php echo $_SERVER["PHP_SELF"] ?>" method="post" id="loginform">
                     <div class="card-title text-center mt-3">Login form</div>
-
                     <div class="card-body  mx-auto">
                         <div class="row g-3">
-
-
-
+                            <!-- email -->
                             <div class="col-12">
                                 <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                                 <input type="text" name="email" id="email" class="form-control border-secondary" placeholder="email"
@@ -143,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                                     </label>
                                 </div>
                             </div>
-
+                            <!-- password -->
                             <div class="col-12">
                                 <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                                 <input type="password" name="password" class="form-control border-secondary" placeholder="password"
@@ -161,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
                             <div class="col-12">
                                 <div class="text-center">
-                                    <input type="submit" class="btn btn-dark" value="login">
+                                    <input type="submit" class="btn btn-dark" value="login" name="login">
                                 </div>
                             </div>
                         </div>
@@ -169,13 +173,12 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                 </form>
             </div>
         </div>
-
     </div>
 
     <script>
-         $(document).ready(function(){
+        $(document).ready(function(){
 
-           $("#loginform").validate({
+            $("#loginform").validate({
                 rules: {
                     email : {
                         required : true,
@@ -185,10 +188,8 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                         required : true,
                         minlength : 5
                     },
-
                 },
                 messages: {
-
                     email : {
                         required : "email is required",
                         email : "please enter a valid email address"
@@ -197,24 +198,21 @@ if ($_SERVER['REQUEST_METHOD'] == "POST") {
                         required : "password is required",
                         minlength : "password at least 5 characters"
                     },
-
                 },
-
-
 
                 submitHandler: function(form) {
                     form.submit();
                 }
             });
 
-         $(".toggle-password").click(function() {
-                $(this).toggleClass("fa-eye fa-eye-slash");
-                input = $(this).parent().find("input");
-                if (input.attr("type") == "password") {
-                    input.attr("type", "text");
-                } else {
-                    input.attr("type", "password");
-                }
+            $(".toggle-password").click(function() {
+                    $(this).toggleClass("fa-eye fa-eye-slash");
+                    input = $(this).parent().find("input");
+                    if (input.attr("type") == "password") {
+                        input.attr("type", "text");
+                    } else {
+                        input.attr("type", "password");
+                    }
             });
         });
     </script>

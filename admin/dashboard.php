@@ -38,6 +38,8 @@
     <!-- bootstrap -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
 
+    <!-- bootstrap js -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jquery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
@@ -47,20 +49,23 @@
 
     <?php  require_once __DIR__ . ("/../utility/header.php") ?>
 
-    <div class="container mt-5">
-        <?php
-        if (isset($_SESSION['msg'])) {
-            echo $_SESSION['msg'];
-            unset($_SESSION['msg']);
-        }
+    <div class="container mt-2">
 
-        ?>
-        <p>welcome , <?php echo isset($_SESSION['name']) ? $_SESSION['name'] : "" ?></p>
+        <div class="d-flex justify-content-between">
 
-        <a href="../auth/register.php" class="btn btn-info">Add user</a>
+            <p class="mt-2">welcome , <?php echo isset($_SESSION['name']) ? $_SESSION['name'] : "" ?></p>
+                <?php
+                    if (isset($_SESSION['toast'])) {
+                        echo $_SESSION['toast'];
+                        unset($_SESSION['toast']);
+                    }
+                ?>
+        </div>
 
-        <div class="table-responsive">
-            <table class="table">
+        <a href="../auth/register.php" class="btn btn-info mb-3">Add user</a>
+
+        <div class="table-responsive mt-2">
+            <table class="table table-bordered border-secondary">
                 <thead>
                     <tr>
                         <th>Id</th>
@@ -99,7 +104,12 @@
                             </tr>
 
                     <?php  }
-                    } ?>
+                    } 
+                    else {
+                        echo "<p class='fs-4 text-secondary text-center'>no user are in database</p>";
+                    }
+                    
+                    ?>
                 </tbody>
 
             </table>
@@ -114,6 +124,13 @@
             setTimeout(() => {
                 $(".alert").fadeOut("fast");
             }, 2000);
+
+              setTimeout(() => {
+                $("#toastmsg").fadeOut("fast");
+            }, 2000);
+
+
+
 
             $(".delete").click(function(event) {
                 if (!confirm("confirm to delete this blog")) {

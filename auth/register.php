@@ -2,158 +2,149 @@
 
     session_start();
 
-    // print_r($_POST);
-
     ini_set('display_errors', 1);
     ini_set('display_startup_errors', 1);
     error_reporting(E_ALL);
 
-    // var_dump($_SESSION);
-
-    if (!isset($_SESSION['email']) ) {
+    if (!isset($_SESSION['email'])) {
         header("Location: ../auth/logout.php");
     } elseif ($_SESSION['role'] === "user") {
         header("Location: ../user/dashboard.php");
-     } //elseif( $_SESSION['role'] === "admin" ) {
-    //     header("Location: ../admin/dashboard.php");
-    // }
-
+    } 
     require_once __DIR__ . ("/../database/db.php");
-
 
     $name = $email = $password = $gender = $role = $interest = $address = null;
     $namevalidation = $emailvalidation = $passwordvalidation = $addressvalidation = $gendervalidation = $interestvalidation = $rolevalidation = null;
     $nameflag = $emailflag = $passwordflag = $genderflag = $roleflag = $interestflag = $addressflag = true;
 
-    function timestamp()
-    {
+    function timestamp() {
         $dateTime = new DateTime("now", new DateTimeZone('Asia/Kolkata'));
         return $dateTime->format('Y-m-d H:i:s');
     }
 
-if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
+    if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
 
-    // name 
+        // name 
+        if (empty($_POST['name'])) {
+            $namevalidation = "name is required";
+            $nameflag = false;
+        } elseif (strlen($_POST['name']) < 2) {
+            $namevalidation = "name must be more than 1 character";
+            $nameflag = false;
+        } else {
+            $name = htmlspecialchars(trim($_POST['name']));
+        }
 
-    if (empty($_POST['name'])) {
-        $namevalidation = "name is required";
-        $nameflag = false;
-    } elseif (strlen($_POST['name']) < 2) {
-        $namevalidation = "name must be more than 1 character";
-        $nameflag = false;
-    } else {
-        $name = htmlspecialchars(trim($_POST['name']));
-       
-    }
+        // email 
+        if (empty($_POST['email'])) {
+            $emailvalidation = "email is required";
+            $emailflag = false;
+        } elseif (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+            $emailvalidation = "please enter a valid email address";
+            $emailflag = false;
+        } else {
+            $email = htmlspecialchars(trim($_POST['email']));
+        }
 
-    // email 
-    if (empty($_POST['email'])) {
-        $emailvalidation = "email is required";
-        $emailflag = false;
-    } elseif (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
-        $emailvalidation = "please enter a valid email address";
-        $emailflag = false;
-    } else {
-        $email = htmlspecialchars(trim($_POST['email']));
-    }
+        // password
+        if (empty($_POST['password'])) {
+            $passwordvalidation = "password is required";
+            $passwordflag = false;
+        } elseif (strlen($_POST['password']) < 5) {
+            $passwordvalidation = "password at least 5 characters";
+            $passwordflag = false;
+        } else {
+            $password = htmlspecialchars(trim($_POST['password']));
+        }
 
-    // password
-    if (empty($_POST['password'])) {
-        $passwordvalidation = "password is required";
-        $passwordflag = false;
-    } elseif (strlen($_POST['password']) < 5) {
-        $passwordvalidation = "password at least 5 characters";
-        $passwordflag = false;
-    } else {
-        $password = htmlspecialchars(trim($_POST['password']));
-    }
+        // gender 
+        if (empty($_POST['gender'])) {
+            $gendervalidation = "gender is required";
+            $genderflag = false;
+        } else {
+            $gender = $_POST['gender'];
+        }
 
-    // gender 
-    if (empty($_POST['gender'])) {
-        $gendervalidation = "gender is required";
-        $genderflag = false;
-    } else {
-        $gender = $_POST['gender'];
-    }
+        // role
+        if (empty($_POST['role'])) {
+            $rolevalidation = "role is required";
+            $roleflag = false;
+        } else {
+            $role = htmlspecialchars(trim($_POST['role']));
+        }
 
-    // role
+        // interest 
+        if (empty($_POST['interest'])) {
+            $interestvalidation = "interest filed is required";
+            $interestflag = false;
+        } else {
+            $interest = implode(",", $_POST['interest']);
+            $interestflag = true;
+            $interest;
+        }
 
-    if (empty($_POST['role'])) {
-        $rolevalidation = "role is required";
-        $roleflag = false;
-    } else {
-        $role = htmlspecialchars(trim($_POST['role']));
-    }
+        // address
+        if (empty($_POST['address'])) {
+            $addressvalidation = "address is required";
+            $addressflag = false;
+        } elseif (strlen($_POST['address']) < 5) {
+            $addressvalidation = "address required at least 5 characters";
+            $addressflag = false;
+        } else {
+            $address = htmlspecialchars(trim($_POST['address']));
+        }
 
-    // interest 
-    if (empty($_POST['interest'])) {
-        $interestvalidation = "interest filed is required";
-        $interestflag = false;
-    } else {
-        $interest = implode(",", $_POST['interest']);
-        $interestflag = true;
-        $interest;
-    }
+        if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $addressflag) {
+            try {
+                $sql_select =  "SELECT email FROM users where email = :email";
+                $stmt = $connect->prepare($sql_select);
+                $stmt->bindParam(":email", $email);
+                $stmt->execute();
 
-    // address
-    if (empty($_POST['address'])) {
-        $addressvalidation = "address is required";
-        $addressflag = false;
-    } elseif (strlen($_POST['address']) < 5) {
-        $addressvalidation = "address required at least 5 characters";
-        $addressflag = false;
-    } else {
-        $address = htmlspecialchars(trim($_POST['address']));
-    }
+                if ($stmt->rowCount() > 0) {
+                    $emailvalidation = "this email already exist";
+                } else {
 
-    
-    if ($nameflag && $emailflag && $passwordflag && $genderflag && $roleflag && $addressflag) {
-    // echo "step ahead";
+                    $created_at = timestamp();
+                    $passwordHash = password_hash((string)$password, PASSWORD_DEFAULT);
 
-        try {
+                    $sql_insert = "INSERT INTO users 
+                            (name, gender, email, password, role, address, interest, created_at) 
+                            VALUES (:name, :gender, :email, :password, :role, :address, :interest, :created_at)";
 
-            $sql_select =  "SELECT email FROM users where email = :email";
-            $stmt = $connect->prepare($sql_select);
-            $stmt->bindParam(":email", $email);
-            $stmt->execute();
+                    $stmt = $connect->prepare($sql_insert);
 
-            if ($stmt->rowCount() > 0) {
-                $emailvalidation = "this email already exist";
-            } else {
+                    $stmt->execute([
+                        ':name' => $name,
+                        ':gender' => $gender,
+                        ':email' => $email,
+                        ':password' => $passwordHash,
+                        ':role' => $role,
+                        ':address' => $address,
+                        ':interest' => $interest,
+                        ':created_at' => $created_at
+                    ]);
 
-                $created_at = timestamp();
-                $passwordHash = password_hash((string)$password, PASSWORD_DEFAULT);
-
-
-                $sql_insert = "INSERT INTO users 
-                        (name, gender, email, password, role, address, interest, created_at) 
-                        VALUES (:name, :gender, :email, :password, :role, :address, :interest, :created_at)";
-
-                        $stmt = $connect->prepare($sql_insert);
-
-                        $stmt->execute([
-                            ':name' => $name,
-                            ':gender' => $gender,
-                            ':email' => $email,
-                            ':password' => $passwordHash,
-                            ':role' => $role,
-                            ':address' => $address,
-                            ':interest' => $interest,
-                            ':created_at' => $created_at
-                        ]);
-                        
-                $_SESSION['msg'] = "<div class='alert alert-success' role='alert' id='alert'>record added successfully</div>";
-
-                header("Location: ../admin/dashboard.php");
+                    //$_SESSION['msg'] = "<div class='alert alert-success' role='alert' id='alert'>record added successfully</div>";
+                     $_SESSION['toast'] = "<div class='toast show' role='alert' id='toastmsg' aria-live='assertive' aria-atomic='true'>
+                            <div class='toast-header bg-success'>
+                                <strong class='me-auto'>Notification</strong>
+                                <button type='button' class='btn-close' data-bs-dismiss='toast' aria-label='Close'></button>
+                            </div>
+                            <div class='toast-body bg-success'>
+                                user add successfully
+                            </div>
+                    </div>";
+                    header("Location: ../admin/dashboard.php");
+                }
+            } catch (Exception $e) {
+                echo "Error occur while inserting data " . $e->getMessage();
+            } finally {
+                $stmt = null;
+                $connect = null;
             }
-        } catch (Exception $e) {
-            echo "Error occur while inserting data " . $e->getMessage();
-        } finally {
-            $stmt = null;
-            $connect = null;
         }
     }
-}
 
 
 
@@ -178,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
     <!-- jquery validation -->
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.21.0/jquery.validate.min.js" integrity="sha512-KFHXdr2oObHKI9w4Hv1XPKc898mE4kgYx58oqsc/JqqdLMDI4YjOLzom+EMlW8HFUd0QfjfAvxSL6sEq/a42fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.21.0/jquery.validate.min.js" integrity="sha512-KFHXdr2oObHKI9w4Hv1XPKc898mE4kgYx58oqsc/JqqdLMDI4YjOLzom+EMlW8HFUd0QfjfAvxSL6sEq/a42fQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
     <style>
         .toggle-password {
@@ -191,9 +182,9 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
 </head>
 
 <body>
-    
-    <?php  require_once __DIR__ . ("/../utility/header.php") ?>
-    
+
+    <?php require_once __DIR__ . ("/../utility/header.php") ?>
+
     <div class="container-fluid">
         <div class="d-flex justify-content-center align-items-center">
             <div class="card mt-5 w-75">
@@ -202,7 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
 
                     <div class="card-body">
                         <div class="row g-4">
-
+                            <!-- name -->
                             <div class="col-12 col-md-6">
                                 <label for="name" class="form-label">Name <span class="text-danger">*</span></label>
                                 <input type="text" name="name" class="form-control border-secondary" id="name" placeholder="name"
@@ -216,6 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
 
                             </div>
 
+                            <!-- email -->
                             <div class="col-12 col-md-6">
                                 <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
                                 <input type="text" name="email" id="email" class="form-control border-secondary" placeholder="email"
@@ -228,11 +220,12 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
                                 </div>
                             </div>
 
+                            <!-- password -->
                             <div class="col-12 col-md-6">
                                 <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
                                 <input type="password" name="password" class="form-control border-secondary" placeholder="password"
                                     value="<?php echo isset($_POST['password']) ? $_POST['password'] : "" ?>">
-                                      <i class="toggle-password fa fa-fw fa-eye"></i>
+                                <i class="toggle-password fa fa-fw fa-eye"></i>
 
                                 <div class="text-danger mt-2">
                                     <label id="password-error" class="error" for="password">
@@ -242,32 +235,28 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
 
                             </div>
 
+                            <!-- gender -->
                             <div class="col-12 col-md-6">
-
                                 <label for="gender" class="form-label">Gender<span class="text-danger">*</span></label>
                                 <br>
-
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="radio" id="male"
-                                        value="male"  <?php 
-                                                                if(isset($_POST['gender'])) {
-                                                                    echo $_POST['gender'] == "male" ? 'checked' : '';
-                                                                }
+                                        value="male" <?php
+                                                        if (isset($_POST['gender'])) {
+                                                            echo $_POST['gender'] == "male" ? 'checked' : '';
+                                                        }
                                                         ?>
                                         name="gender"
                                         checked>
-
-                  
-
                                     <label class="form-check-label" for="male">Male</label>
                                 </div>
 
                                 <div class="form-check form-check-inline ">
                                     <input class="form-check-input border-dark" type="radio" id="female"
-                                        value="female" <?php 
-                                                                if(isset($_POST['gender'])) {
-                                                                    echo $_POST['gender'] == "female" ? 'checked' : '';
-                                                                }
+                                        value="female" <?php
+                                                        if (isset($_POST['gender'])) {
+                                                            echo $_POST['gender'] == "female" ? 'checked' : '';
+                                                        }
                                                         ?>
                                         name="gender">
                                     <label class="form-check-label" for="female">Female</label>
@@ -275,28 +264,28 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
 
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="radio" id="other"
-                                        value="other" <?php 
-                                                            if(isset($_POST['gender'])) {
-                                                                    echo $_POST['gender'] == "other" ? 'checked' : '';
-                                                                }
+                                        value="other" <?php
+                                                        if (isset($_POST['gender'])) {
+                                                            echo $_POST['gender'] == "other" ? 'checked' : '';
+                                                        }
                                                         ?>
                                         name="gender">
                                     <label class="form-check-label" for="other">Other</label>
                                 </div>
                             </div>
 
+                            <!-- role -->
                             <div class="col-12 col-md-6">
                                 <label for="role" class="form-label">Role<span class="text-danger">*</span></label>
                                 <br>
-
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="radio" id="admin"
                                         value="admin"
-                                                <?php 
-                                                    if(isset($_POST['role'])) {
-                                                        echo $_POST['role'] == "admin" ? 'checked' : '';
-                                                    }
-                                                ?>
+                                        <?php
+                                        if (isset($_POST['role'])) {
+                                            echo $_POST['role'] == "admin" ? 'checked' : '';
+                                        }
+                                        ?>
                                         name="role" checked>
                                     <label class="form-check-label" for="admin">Admin</label>
                                 </div>
@@ -304,32 +293,28 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
                                 <div class="form-check form-check-inline ">
                                     <input class="form-check-input border-dark" type="radio" id="user"
                                         value="user"
-                                         <?php 
-                                             if(isset($_POST['role'])) {
-                                                        echo $_POST['role'] == "user" ? 'checked' : '';
-                                            }
+                                        <?php
+                                        if (isset($_POST['role'])) {
+                                            echo $_POST['role'] == "user" ? 'checked' : '';
+                                        }
                                         ?>
                                         name="role">
                                     <label class="form-check-label" for="user">User</label>
                                 </div>
-
-
                             </div>
 
+                            <!-- interest -->
                             <div class="col-12 col-md-6">
                                 <label for="interest" class="form-label">Interest</label>
                                 <br>
-
                                 <div class="form-check form-check-inline">
-
-
                                     <input class="form-check-input border-dark" type="checkbox" id="reading"
                                         value="reading"
-                                        <?php 
-                                            if(isset($_POST['interest'])) {
-                                                echo (in_array("reading", $_POST['interest'])) ? 'checked' : '';
-                                            }
-                                             ?>
+                                        <?php
+                                        if (isset($_POST['interest'])) {
+                                            echo (in_array("reading", $_POST['interest'])) ? 'checked' : '';
+                                        }
+                                        ?>
                                         name="interest[]">
                                     <label class="form-check-label" for="reading">Reading</label>
                                 </div>
@@ -337,11 +322,11 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="checkbox" id="playing"
                                         value="playing"
-                                          <?php 
-                                            if(isset($_POST['interest'])) {
-                                                echo (in_array("playing", $_POST['interest'])) ? 'checked' : '';
-                                            }
-                                          ?>
+                                        <?php
+                                        if (isset($_POST['interest'])) {
+                                            echo (in_array("playing", $_POST['interest'])) ? 'checked' : '';
+                                        }
+                                        ?>
                                         name="interest[]">
                                     <label class="form-check-label" for="playing">Playing</label>
                                 </div>
@@ -349,11 +334,11 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="checkbox" id="travelling"
                                         value="travelling"
-                                          <?php 
-                                             if(isset($_POST['interest'])) {
-                                                echo (in_array("travelling", $_POST['interest'])) ? 'checked' : '';
-                                            }
-                                          ?>
+                                        <?php
+                                        if (isset($_POST['interest'])) {
+                                            echo (in_array("travelling", $_POST['interest'])) ? 'checked' : '';
+                                        }
+                                        ?>
                                         name="interest[]">
                                     <label class="form-check-label" for="travelling">Travelling</label>
                                 </div>
@@ -361,19 +346,18 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
                                 <div class="form-check form-check-inline">
                                     <input class="form-check-input border-dark" type="checkbox" id="exploring"
                                         value="exploring"
-                                          <?php 
-                                             if(isset($_POST['interest'])) {
-                                                echo (in_array("exploring", $_POST['interest'])) ? 'checked' : '';
-                                            }
-                                          ?>
+                                        <?php
+                                        if (isset($_POST['interest'])) {
+                                            echo (in_array("exploring", $_POST['interest'])) ? 'checked' : '';
+                                        }
+                                        ?>
                                         name="interest[]">
                                     <label class="form-check-label" for="exploring">Exploring</label>
                                 </div>
                             </div>
 
-
+                            <!-- address -->
                             <div class="col-12">
-
                                 <label for="address" class="form-label">Address<span class="text-danger">*</span></label><br>
                                 <textarea class="form-control border-dark" name="address" placeholder="address"><?php echo isset($_POST['address']) ? $_POST['address'] : "" ?></textarea>
 
@@ -384,6 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
                                 </div>
                             </div>
 
+                            <!-- register btn -->
                             <div class="col-12">
                                 <div class="text-center">
                                     <input type="submit" class="btn btn-dark" id="register" name="register">
@@ -394,7 +379,6 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
                 </form>
             </div>
         </div>
-
     </div>
 
     <script>
@@ -441,7 +425,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
                 messages: {
                     name: {
                         required: "name is required",
-                        minlength: "name must be more than 1 character"
+                        minlength: "name at least 2 character"
                     },
                     email: {
                         required: "email is required",
@@ -466,7 +450,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['register'])) {
                 }
             });
 
-             $(".toggle-password").click(function() {
+            $(".toggle-password").click(function() {
                 $(this).toggleClass("fa-eye fa-eye-slash");
                 input = $(this).parent().find("input");
                 if (input.attr("type") == "password") {

@@ -1,6 +1,6 @@
 <nav class="navbar bg-dark">
     
-        <div class="d-flex justify-content-end align-items-start text-light">
+        <div class="d-flex justify-content-between">
             <a href="
                 <?php 
                     if($_SESSION['role'] === "admin") {
